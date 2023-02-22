@@ -3,7 +3,8 @@ const app = express();
 const {db} = require("./db")
 const seed = require('./seed')
 seed();
-const { Show, User } = require('./models/index')
+const { Show, User } = require('./models/index');
+const { request, response } = require("express");
 
 const port = 3000;
 
@@ -94,7 +95,7 @@ app.get('/users/:id/watched',async (request,response) =>{
 //This will delete a show based on its id
 app.delete('/shows/:id', async(request, response) => {
     try{
-        let show = await Show.findAll({where:{id:(request.params.id)}})
+        let show = await Show.findByPk(request.params.id);
         await Show.destroy({
             where:{
                 id:(request.params.id)
@@ -109,6 +110,55 @@ app.delete('/shows/:id', async(request, response) => {
         response.status(404).send({err:error.message})
     }
  });
+
+ //Put methods
+app.use(express.json())
+
+ // Update the status of a show
+app.put('/shows/:id/rating', async(request,response) => {
+    try{
+        let show = await Show.findByPk(request.params.id);
+        if (!show){
+            throw new Error("Cannot find show")
+        }
+        show.update(request.body);
+        response.send("Show rating has been UPDATED")
+    }catch(error){
+        response.status(404).send({err:error.message})
+    }
+});
+//Updating the status of the show (either on-giong or cancelled)
+app.put('/shows/:id/status', async(request,response) => {
+    try{
+        let show = await Show.findByPk(request.params.id);
+        if (!show){
+            throw new Error("Cannot find show")
+        }
+        show.update(request.body);
+        response.send("Show status has been UPDATED")
+    }catch(error){
+        response.status(404).send({err:error.message})
+    }
+});
+//Adding a show to a Users watchlist
+app.put('/users/:id/addshow/:showid', async(request,response) => {
+    try{
+        let user = await User.findByPk(request.params.id)
+        let show = await Show.findByPk(request.params.showid);
+        if (!show){
+            throw new Error("Cannot find show")
+        }
+        if (!user){
+            throw new Error("Cannot find user")
+        }
+        await user.addShow(request.params.showid)
+        console.log(user)
+        response.send("Show has been added to user")
+    }catch(error){
+        response.status(404).send({err:error.message})
+    }
+});
+
 
 app.listen(port, () => {
     db.sync();
