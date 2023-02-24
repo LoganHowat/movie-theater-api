@@ -85,7 +85,7 @@ router.put('/:id/rating', [check("rating").not().isEmpty()],async(request,respon
 });
 
 //Updating the status of the show (either on-giong or cancelled)
-router.put('/:id/status', [check("status").not().isEmpty().trim()], async(request,response) => {
+router.put('/:id/status', [check("status").not().isEmpty().trim().isLength({min:5, max:25})], async(request,response) => {
     try{
         const errors = validationResult(request);
         if(!errors.isEmpty()){//Checks that the status input is not empty
